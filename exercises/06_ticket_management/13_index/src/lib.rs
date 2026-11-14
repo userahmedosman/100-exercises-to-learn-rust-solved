@@ -13,17 +13,17 @@ pub struct TicketStore {
 impl Index<TicketId> for TicketStore{
     type Output = Ticket;
 
-    fn index(&self, index: TicketId) -> &Self::Output {
+    fn index(&self, id: TicketId) -> &Self::Output {
 
-        self.tickets.index(index.0 as usize) // id syncs with indexing
+        self.tickets.iter().filter(|&t| t.id == id).unwrap()
     }
 }
 
 impl Index<&TicketId> for TicketStore{
     type Output = Ticket;
 
-    fn index(&self, index: &TicketId) -> &Self::Output {
-        self.tickets.index(index.0 as usize)
+    fn index(&self, id: &TicketId) -> &Self::Output {
+        &self[*id]
     }
 }
 
