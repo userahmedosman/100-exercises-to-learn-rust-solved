@@ -11,6 +11,10 @@ use ticket_fields::{TicketDescription, TicketTitle};
 #[derive(Clone)]
 pub struct TicketStore {
     tickets: Vec<Ticket>,
+<<<<<<< HEAD
+=======
+    counter: u64,
+>>>>>>> ec11017d057aad33b81e877630ba5c7fd6ae33ef
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -41,6 +45,7 @@ impl TicketStore {
     pub fn new() -> Self {
         Self {
             tickets: Vec::new(),
+<<<<<<< HEAD
         }
     }
 
@@ -49,6 +54,28 @@ impl TicketStore {
     }
 }
 
+=======
+            counter: 0,
+        }
+    }
+
+    pub fn add_ticket(&mut self, td: TicketDraft) -> TicketId {
+        let id = self.counter;
+        self.counter+=1;
+        self.tickets.push(Ticket { 
+            id: TicketId(id), 
+            title: td.title, 
+            description: td.description, 
+            status: Status::ToDo });
+
+        TicketId(id)
+    }
+
+    pub fn get(&self, t_id: TicketId) -> Option<&Ticket>{
+        self.tickets.iter().find(|t | t.id == t_id)
+    }
+}
+>>>>>>> ec11017d057aad33b81e877630ba5c7fd6ae33ef
 #[cfg(test)]
 mod tests {
     use crate::{Status, TicketDraft, TicketStore};
