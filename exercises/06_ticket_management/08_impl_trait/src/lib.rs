@@ -1,21 +1,17 @@
-
+// TODO: Implement the `in_progress` method. It must return an iterator over the tickets in
+//  `TicketStore` with status set to `Status::InProgress`.
 use ticket_fields::{TicketDescription, TicketTitle};
 
-// TODO: Provide an `iter` method that returns an iterator over `&Ticket` items.
-// Hint: just like in the previous exercise, you want to delegate the iteration to
-//   the `Vec<Ticket>` field in `TicketStore`. Look at the standard library documentation
-//   for `Vec` to find the right type to return from `iter`.
 #[derive(Clone)]
 pub struct TicketStore {
     tickets: Vec<Ticket>,
 }
 
-
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Ticket {
-    title: TicketTitle,
-    description: TicketDescription,
-    status: Status,
+    pub title: TicketTitle,
+    pub description: TicketDescription,
+    pub status: Status,
 }
 
 #[derive(Clone, Debug, Copy, PartialEq)]
@@ -36,9 +32,10 @@ impl TicketStore {
         self.tickets.push(ticket);
     }
 
-    pub fn iter(self) -> std::slice::Iter<Ticket>{
-        self.tickets.iter()
+    pub fn in_progress(&self) -> impl Iterator<Item = &Ticket>{
+        self.tickets.iter().filter(|t| t.status == Status::InProgress)
     }
+
 }
 
 #[cfg(test)]
@@ -47,25 +44,25 @@ mod tests {
     use ticket_fields::test_helpers::{ticket_description, ticket_title};
 
     #[test]
-    fn add_ticket() {
+    fn in_progress() {
         let mut store = TicketStore::new();
 
-        let ticket = Ticket {
+        let todo = Ticket {
             title: ticket_title(),
             description: ticket_description(),
             status: Status::ToDo,
         };
-        store.add_ticket(ticket);
+        store.add_ticket(todo);
 
-        let ticket = Ticket {
+        let in_progress = Ticket {
             title: ticket_title(),
             description: ticket_description(),
             status: Status::InProgress,
         };
-        store.add_ticket(ticket);
+        store.add_ticket(in_progress.clone());
 
-        let tickets: Vec<&Ticket> = store.iter().collect();
-        let tickets2: Vec<&Ticket> = store.iter().collect();
-        assert_eq!(tickets, tickets2);
+        let in_progress_tickets: Vec<&Ticket> = store.in_progress().collect();
+        assert_eq!(in_progress_tickets.len(), 1);
+        assert_eq!(in_progress_tickets[0], &in_progress);
     }
 }
