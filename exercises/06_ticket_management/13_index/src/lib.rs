@@ -14,8 +14,7 @@ impl Index<TicketId> for TicketStore{
     type Output = Ticket;
 
     fn index(&self, id: TicketId) -> &Self::Output {
-
-        self.tickets.iter().filter(|&t| t.id == id).unwrap()
+        self.tickets.iter().find(|&t| t.id == id).unwrap()
     }
 }
 
