@@ -14,8 +14,8 @@ impl Index<TicketId> for TicketStore{
     type Output = Ticket;
 
     fn index(&self, index: TicketId) -> &Self::Output {
-        let TicketId(id) = index;
-        self.tickets.index(id as usize)
+
+        self.tickets.index(index.0 as usize) // id syncs with indexing
     }
 }
 
@@ -23,9 +23,7 @@ impl Index<&TicketId> for TicketStore{
     type Output = Ticket;
 
     fn index(&self, index: &TicketId) -> &Self::Output {
-        let TicketId(id) = *index;
-
-        self.tickets.index(id as usize)
+        self.tickets.index(index.0 as usize)
     }
 }
 
