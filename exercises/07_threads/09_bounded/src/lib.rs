@@ -1,4 +1,3 @@
-
 use std::sync::mpsc;
 // TODO: Convert the implementation to use bounded channels.
 use crate::data::{Ticket, TicketDraft};
@@ -13,42 +12,36 @@ pub struct TicketStoreClient {
     sender: SyncSender<Command>,
 }
 
+#[derive(Debug, thiserror::Error)]
+#[error("The store is overloaded")]
+pub struct OverloadedError;
+
 impl TicketStoreClient {
-    pub fn insert(&self, draft: TicketDraft) -> Result<TicketId, TrySendError<TicketDraft>> {
+    pub fn insert(&self, draft: TicketDraft) -> Result<TicketId, OverloadedError> {
+        let (response_sender, response_receiver) = mpsc::sync_channel(1);
+        let id = self
+            .sender
+            .try_send(Command::Insert {
+                draft: draft.clone(),
+                response_channel: response_sender,
+            })
+            .map_err(|_| OverloadedError);
 
-        let (response_sender, response_receiver) = mpsc::channel();
-        let id = self.sender.send(Command::Insert {
-            draft:draft.clone(),
-            response_channel: response_sender,
-        }).unwrap();
-
-        match response_receiver.recv(){
-            Ok(result) => {
-                Ok(result)
-            },
-            Err(err) => {
-                Err(TrySendError::Full(draft))
-            }
-        }
+        Ok(response_receiver.recv().unwrap())
     }
 
-    pub fn get(&self, id: TicketId) -> Result<Option<Ticket>, TrySendError<TicketId>> {
+    pub fn get(&self, id: TicketId) -> Result<Option<Ticket>, OverloadedError> {
+        let (response_sender, response_receiver) = mpsc::sync_channel(1);
 
-        let (response_sender, response_receiver) = mpsc::channel();
+        let ticket = self
+            .sender
+            .try_send(Command::Get {
+                id,
+                response_channel: response_sender,
+            })
+            .map_err(|_| OverloadedError);
 
-        let ticket = self.sender.send(Command::Get {
-            id,
-            response_channel: response_sender,
-        }).unwrap();
-
-        match response_receiver.recv(){
-            Ok(result) => {
-                Ok(result)
-            },
-            Err(err) => {
-                Err(TrySendError::Full(id))
-            }
-        }
+        Ok(response_receiver.recv().unwrap())
     }
 }
 
@@ -61,11 +54,11 @@ pub fn launch(capacity: usize) -> TicketStoreClient {
 enum Command {
     Insert {
         draft: TicketDraft,
-        response_channel: Sender<TicketId>,
+        response_channel: SyncSender<TicketId>,
     },
     Get {
         id: TicketId,
-        response_channel: Sender<Option<Ticket>>,
+        response_channel: SyncSender<Option<Ticket>>,
     },
 }
 
